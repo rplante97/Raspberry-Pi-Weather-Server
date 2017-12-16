@@ -1,0 +1,220 @@
+<html>
+<head>
+		<!--include jquery and canvas js libraries-->
+		<script type="text/javascript" src="/CanvasJS/javascript/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="/CanvasJS/javascript/canvasjs.min.js"></script>
+		<!--import Roboto font -->
+		<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+		<script>
+			
+		//Function to convert string to title case, used for the "forcast" card as data is returned in lowercase
+		function toTitleCase(str)
+		{
+			return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+		}
+		
+		//Define our variables for the weathercards	
+		var humidity;
+		var pressure;
+		var description;
+		var currentTemp;
+		
+		//Access the JSON file at weathercardData.php
+		$.getJSON("http://weatherserver.ddns.net/CanvasJS/weathercardData.php", function (addData) {
+			humidity = addData[0].humidity;
+			pressure = addData[0].pressure;
+			description = addData[0].description;
+			description = toTitleCase(description);
+			currentTemp = addData[0].tempnow;
+			
+			//Insert the values set above into the html
+			document.getElementById("temp").innerHTML = currentTemp + "&deg;F";
+			document.getElementById("humidity").innerHTML = humidity + "%";
+			document.getElementById("pressure").innerHTML = pressure;
+			document.getElementById("description").innerHTML = description;
+		});
+		
+		//Wait for document to be finsh loading
+		$(document).ready (function() {
+			
+			
+		//Define our chart and set some formatting options
+		var chart = new CanvasJS.Chart("chartContainer", {
+            theme: "light1",
+            backgroundColor: "#e2e1e0",
+            axisY:{
+				title: "Degrees Fahrenheit",
+				fontFamily: "Roboto",
+			},
+			axisX:{
+				valueFormatString: "DD MMM hh:mm tt",
+				
+			},
+            title: {
+                text: "Temperature Data",
+                fontFamily: "Roboto",
+            },
+            animationEnabled: true,
+            animationDuration: 1500,
+            toolTip: {
+                animationEnabled: true,
+                shared: true
+            },
+            data: []
+        });
+        
+        //These are the arrays and variables that create the graph
+        var dataPoints = [];
+        var dataPoints1 = [];
+        var dataSeries1, dataSeries2;
+$.when(
+
+	//Parse data array for inside temp line
+    $.getJSON("http://weatherserver.ddns.net/CanvasJS/weatherData.php", function(data) {
+      for (var i = 0; i < data.length; i++) {
+		dataPoints.push({
+			x: parseInt(data[i].datetime * 1000), //Current time
+			y: parseFloat(data[i].insidetemp)
+		});
+		//console.log(data[i].id);
+		//console.log(data[i].datetime);
+		//console.log(data[i].outsidetemp);
+	}
+      
+      //Format indoor temp line axes and name
+      dataSeries1 = {
+                        type: "line",
+                        showInLegend: true,
+                        fontFamily: "Roboto",
+                        name: "Indoor Temperature",
+                        xValueType: "dateTime",
+                        xValueFormatString: "DD MMM YY hh:mm tt",
+                        dataPoints: dataPoints
+                    }
+    }),
+    //Outdoor temp line
+    $.getJSON("http://weatherserver.ddns.net/CanvasJS/weatherData.php", function(data1) {
+		for (var i = 0; i < data1.length; i++) {
+		dataPoints1.push({
+			x: parseInt(data1[i].datetime * 1000),
+			y: parseFloat(data1[i].outsidetemp)
+		});
+		//console.log(data1[i].id);
+		//console.log(data1[i].datetime);
+		//console.log(data1[i].outsidetemp);
+	}
+		
+        dataSeries2 = {
+          type: "line",
+          showInLegend: true,
+          fontFamily: "Roboto",
+          name: "Outdoor Temperature",
+          xValueType: "dateTime",
+          dataPoints: dataPoints1
+ 
+	
+        }
+    })
+    //Push the data and formatting for both the lines to the chart and render
+ ).then(function	()	{
+ 	chart.options.data.push(dataSeries1);
+    chart.options.data.push(dataSeries2);
+    chart.render();
+ }); 	
+		
+
+});
+		
+		</script>
+	</head>
+	<body style="margin:0; overflow-x:hidden;">
+		
+		<div id="chartContainer" style="height: 50%; margin: auto;"></div>
+		<div style = "clear:both; width: 100%; height:50%;font-size: 0; position:absolute; text-align: center; background: linear-gradient(#e2e1e0, #81807f);">
+			<div class="card">
+				<div class="titlebar">Currently</div>
+				<div class="cardContent">
+					<h1 id="temp"></h1>
+					<h5>Orono, ME</h5>
+				
+				</div>
+			</div>
+			<div class="card">
+				<div class="titlebar">Forecast</div>
+				<div class="cardContentSingle">
+					<h1 id="description"></h1>
+					<h5></h5>
+				</div>
+			</div>
+			<div class="card">
+				<div class="titlebar">Humidity</div>
+				<div class="cardContentSingle">
+					<h1 id="humidity"></h1>
+					<h5></h5>
+				</div>
+			</div>
+			<div class="card">
+				<div class="titlebar">Pressure</div>
+				<div class="cardContent">
+					<h1 id="pressure"></h1>
+					<h5>mmHg</h5>
+				</div>
+			</div>
+		</div>
+		<style>
+		.canvasjs-chart-credit {
+			display:none;
+			}
+			
+		.card {
+			background: #eeeeee;
+			border-radius: 2px;
+			display: inline-block;
+			height: 300px;
+			margin: 1rem;
+			position: relative;
+			width: 300px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+			transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+			font-family: 'Roboto';
+			}
+			
+			.card:hover {
+			box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+			}
+			
+			.titlebar{
+			background: #cccccc;
+			width: 100%;
+			height: 40px;
+			position: absolute;
+			font-size: 24px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			}
+			
+			.cardContent{
+			position: absolute;
+			padding-top: 40px;
+			width: 100%;
+			top: 0;
+			bottom: 0;
+			font-size:30px;
+			}
+			
+			.cardContentSingle{
+			position: absolute;
+			padding-top: 40px;
+			width: 100%;
+			top: 0;
+			bottom: 0;
+			font-size:30px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			}
+			
+		</style>
+	</body>
+</html>

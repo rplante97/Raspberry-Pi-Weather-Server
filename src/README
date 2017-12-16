@@ -1,0 +1,6 @@
+Raspberry Pi Web Server
+
+Ryan Plante, Patrick Roy
+
+CanvasJS Folder and index.html not originally located in src folder.
+They go in /var/www/html as they are run on the Apache web server
