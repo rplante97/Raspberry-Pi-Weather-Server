@@ -17,7 +17,6 @@ static double read_temp(char *filename) {
 	int tempstart;
 	int temp_int;
 
-	/* Your code here */
 	//open our temp sensor connection
 	fd = open(SENSOR_NAME, O_RDONLY);
 	if(fd<0){
